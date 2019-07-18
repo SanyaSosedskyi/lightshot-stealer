@@ -5,6 +5,7 @@ import os.path
 import httplib2
 import urllib.request as urllib2
 import re
+import base36
 
 
 # CREATING MAIN-WINDOW
@@ -14,8 +15,9 @@ class Main(tk.Frame):
         self.root = _root
         self.images = []
         self.image_buttons = {}
+        if not os.path.exists('images'):
+            os.makedirs('images')
         self.init_main()
-        self.upload_files()
 
     def init_main(self):
         # CREATING TOOLBAR AND ITS LABELS, ENTRIES AND BUTTON(download)
@@ -35,8 +37,9 @@ class Main(tk.Frame):
         self.label_amount_images.pack(side=tk.LEFT, padx=5)
         self.entry_amount_images = tk.Entry(self.toolbar)
         self.entry_amount_images.pack(side=tk.LEFT)
-        self.button_download = tk.Button(self.toolbar, text='Скачать', bg='#fafafa', font='Arial 12',
-                                         command=self.upload_files)
+        self.button_download = tk.Button(self.toolbar, text='Скачать', bg='#fafafa', font='Arial 12')
+        self.button_download.bind('<1>', lambda event: self.upload_files(self.entry_last_url.get(),
+                                                                         self.entry_amount_images.get()))
         self.button_download.pack(side=tk.LEFT, padx=5)
         self.button_delete = tk.Button(self.toolbar, text='Удалить все', bg='#fafafa', font='Arial 12',
                                        command=self.delete_files)
@@ -47,7 +50,6 @@ class Main(tk.Frame):
         self.scroll_y = tk.Scrollbar(root, orient='vertical', command=self.image_canvas.yview)
         self.images_frame = tk.Frame(self.image_canvas)
         self.show_images()
-
         self.image_canvas.create_window(0, 0, anchor='nw', window=self.images_frame)
         self.image_canvas.update_idletasks()
         self.image_canvas.configure(scrollregion=self.image_canvas.bbox('all'), yscrollcommand=self.scroll_y.set)
@@ -62,7 +64,6 @@ class Main(tk.Frame):
         img_counter = 0
         self.images_list = [name for name in os.listdir('./images') if os.path.isfile('./images/'+name)]
         self.images = []
-        print(self.images_list)
         for _img in self.images_list:
             self.img = Image.open('images/'+_img)
             img_width = self.img.width
@@ -79,29 +80,47 @@ class Main(tk.Frame):
             y += 1
             img_counter += 1
 
+# DELETE ALL FILES FROM 'IMAGES' DIRECTORY
     def clear_images_frame(self):
         list = self.images_frame.grid_slaves()
         for l in list:
             l.destroy()
 
-    def upload_files(self):
-        pass
+# DOWNLOAD SCREENSHOTS FROM LIGHTSHOT VIA GENERATED URL
+    def upload_files(self, last_url, amount):
+        number = base36.loads(last_url)
+        for _ in range(int(amount)):
+            url = 'https://prnt.sc/{0}'.format(base36.dumps(number-1))
+            number -= 1
+            req = urllib2.Request(url, headers={'User-Agent': 'Magic Browser'})
+            content1 = urllib2.urlopen(req).read().decode('utf-8')
+            imgurl_temp = re.search(r'img .+src=".+" crossorigin', content1)
+            img_url = re.search(r'http.+.png', imgurl_temp.group(0))
+            if img_url != None:
+                h = httplib2.Http('.cache')
+                response, content = h.request(img_url.group(0))
+                out = open('./images/{0}.png'.format(base36.dumps(number-1)), 'wb')
+                out.write(content)
+                out.close()
 
     def delete_files(self):
         self.files = [file for file in os.listdir('./images')]
         for f in self.files:
             os.remove('./images/'+f)
         self.show_images()
+
     def open_image(self, event):
         Child(event.widget['image'], self.image_buttons)
 
-# CREATING CHILD-WINDOW
+
+# CREATING CHILD-WINDOW THAT MAKE IMAGE FULL SIZE
 class Child(tk.Toplevel):
     def __init__(self, _image_, image_buttons):
         tk.Toplevel.__init__(self)
         self._image_ = _image_
         self.image_buttons = image_buttons
         self.init_child()
+
     def init_child(self):
         self.title('Image')
         self.w = self.image_buttons[self._image_][0]
@@ -125,7 +144,7 @@ app = Main(root)
 app.pack()
 root.title('Lightshot stealer')
 sw = int((root.winfo_screenwidth()-1000)/2)
-sh = int((root.winfo_screenheight()-600)/2)
-root.geometry('{0}x{1}+{2}+{3}'.format(1000, 600, sw, sh))
+sh = int((root.winfo_screenheight()-500)/2)
+root.geometry('{0}x{1}+{2}+{3}'.format(1000, 500, sw, sh))
 root.resizable(False, False)
 root.mainloop()
