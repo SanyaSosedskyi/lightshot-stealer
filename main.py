@@ -6,7 +6,6 @@ import httplib2
 import urllib.request as urllib2
 import re
 import base36
-import time
 
 
 # CREATING MAIN-WINDOW
@@ -59,7 +58,6 @@ class Main(tk.Frame):
 
 # PRINT PHOTOS TO WINDOW FROM DIRECTORY 'images'
     def show_images(self):
-        start = time.time()
         self.clear_images_frame()
         counter = 0
         y = 1
@@ -67,7 +65,10 @@ class Main(tk.Frame):
         self.images_list = [name for name in os.listdir('./images') if os.path.isfile('./images/'+name)]
         self.images = []
         for _img in self.images_list:
-            self.img = Image.open('images/'+_img)
+            try:
+                self.img = Image.open('images/'+_img)
+            except OSError:
+                continue
             img_width = self.img.width
             img_height = self.img.height
             self.img = self.img.resize((158, 158), Image.BILINEAR)
@@ -81,7 +82,6 @@ class Main(tk.Frame):
             self.button_image.grid(row=counter, column=y)
             y += 1
             img_counter += 1
-        print(time.time()-start)
 
 # DELETE ALL FILES FROM 'IMAGES' DIRECTORY
     def clear_images_frame(self):
@@ -102,10 +102,23 @@ class Main(tk.Frame):
             if img_url != None:
                 h = httplib2.Http('.cache')
                 response, content = h.request(img_url.group(0))
-                out = open('./images/{0}.png'.format(base36.dumps(number)), 'wb')
-                out.write(content)
-                out.close()
+                with open('./images/{0}.png'.format(base36.dumps(number)), 'wb') as out:
+                    out.write(content)
+        self.redrawing_canvas()
+
+    def redrawing_canvas(self):
+        self.image_canvas.destroy()
+        self.scroll_y.destroy()
+        self.images_frame.destroy()
+        self.image_canvas = tk.Canvas(root)
+        self.scroll_y = tk.Scrollbar(root, orient='vertical', command=self.image_canvas.yview)
+        self.images_frame = tk.Frame(self.image_canvas)
         self.show_images()
+        self.image_canvas.create_window(0, 0, anchor='nw', window=self.images_frame)
+        self.image_canvas.update_idletasks()
+        self.image_canvas.configure(scrollregion=self.image_canvas.bbox('all'), yscrollcommand=self.scroll_y.set)
+        self.image_canvas.pack(fill='both', expand=True, side='left')
+        self.scroll_y.pack(fill='y', side='right')
 
     def delete_files(self):
         self.files = [file for file in os.listdir('./images')]
