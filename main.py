@@ -6,6 +6,7 @@ import httplib2
 import urllib.request as urllib2
 import re
 import base36
+import time
 
 
 # CREATING MAIN-WINDOW
@@ -58,6 +59,7 @@ class Main(tk.Frame):
 
 # PRINT PHOTOS TO WINDOW FROM DIRECTORY 'images'
     def show_images(self):
+        start = time.time()
         self.clear_images_frame()
         counter = 0
         y = 1
@@ -68,7 +70,7 @@ class Main(tk.Frame):
             self.img = Image.open('images/'+_img)
             img_width = self.img.width
             img_height = self.img.height
-            self.img = self.img.resize((158, 158), Image.ANTIALIAS)
+            self.img = self.img.resize((158, 158), Image.BILINEAR)
             self.images.append(ImageTk.PhotoImage(self.img))
             if y == 7:
                 y = 1
@@ -79,6 +81,7 @@ class Main(tk.Frame):
             self.button_image.grid(row=counter, column=y)
             y += 1
             img_counter += 1
+        print(time.time()-start)
 
 # DELETE ALL FILES FROM 'IMAGES' DIRECTORY
     def clear_images_frame(self):
@@ -99,9 +102,10 @@ class Main(tk.Frame):
             if img_url != None:
                 h = httplib2.Http('.cache')
                 response, content = h.request(img_url.group(0))
-                out = open('./images/{0}.png'.format(base36.dumps(number-1)), 'wb')
+                out = open('./images/{0}.png'.format(base36.dumps(number)), 'wb')
                 out.write(content)
                 out.close()
+        self.show_images()
 
     def delete_files(self):
         self.files = [file for file in os.listdir('./images')]
@@ -125,7 +129,7 @@ class Child(tk.Toplevel):
         self.title('Image')
         self.w = self.image_buttons[self._image_][0]
         self.h = self.image_buttons[self._image_][1]
-        while self.w > 1000 or self.h >600:
+        while self.w > 1000 or self.h > 600:
             self.w = int(self.w*0.95)
             self.h = int(self.h*0.95)
         self.sw = int((root.winfo_screenwidth()-self.w)/2)
@@ -144,7 +148,7 @@ app = Main(root)
 app.pack()
 root.title('Lightshot stealer')
 sw = int((root.winfo_screenwidth()-1000)/2)
-sh = int((root.winfo_screenheight()-500)/2)
-root.geometry('{0}x{1}+{2}+{3}'.format(1000, 500, sw, sh))
+sh = int((root.winfo_screenheight()-600)/2)
+root.geometry('{0}x{1}+{2}+{3}'.format(1000, 600, sw, sh))
 root.resizable(False, False)
 root.mainloop()
