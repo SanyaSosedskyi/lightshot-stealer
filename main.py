@@ -7,8 +7,6 @@ import urllib.request as urllib2
 import re
 import base36
 import pytesseract
-import random
-import time
 
 # CREATING MAIN-WINDOW
 class Main(tk.Frame):
@@ -74,7 +72,6 @@ class Main(tk.Frame):
             self.button_image.grid(row=counter, column=y)
             y += 1
             img_counter += 1
-            break
 
 # DELETE ALL FILES FROM 'IMAGES' DIRECTORY
     def clear_images_frame(self):
