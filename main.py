@@ -6,7 +6,9 @@ import httplib2
 import urllib.request as urllib2
 import re
 import base36
-
+import pytesseract
+import random
+import time
 
 # CREATING MAIN-WINDOW
 class Main(tk.Frame):
@@ -44,17 +46,7 @@ class Main(tk.Frame):
         self.button_delete = tk.Button(self.toolbar, text='Удалить все', bg='#fafafa', font='Arial 12',
                                        command=self.delete_files)
         self.button_delete.pack(side=tk.LEFT, padx=5)
-
-        # CREATING SCROLLBAR, CANVAS, FRAME and PUT IMAGES INTO THE FRAME
-        self.image_canvas = tk.Canvas(root)
-        self.scroll_y = tk.Scrollbar(root, orient='vertical', command=self.image_canvas.yview)
-        self.images_frame = tk.Frame(self.image_canvas)
-        self.show_images()
-        self.image_canvas.create_window(0, 0, anchor='nw', window=self.images_frame)
-        self.image_canvas.update_idletasks()
-        self.image_canvas.configure(scrollregion=self.image_canvas.bbox('all'), yscrollcommand=self.scroll_y.set)
-        self.image_canvas.pack(fill='both', expand=True, side='left')
-        self.scroll_y.pack(fill='y', side='right')
+        self.create_canvas()
 
 # PRINT PHOTOS TO WINDOW FROM DIRECTORY 'images'
     def show_images(self):
@@ -82,12 +74,25 @@ class Main(tk.Frame):
             self.button_image.grid(row=counter, column=y)
             y += 1
             img_counter += 1
+            break
 
 # DELETE ALL FILES FROM 'IMAGES' DIRECTORY
     def clear_images_frame(self):
         list = self.images_frame.grid_slaves()
         for l in list:
             l.destroy()
+
+# CREATING SCROLLBAR, CANVAS, FRAME and PUT IMAGES INTO THE FRAME
+    def create_canvas(self):
+        self.image_canvas = tk.Canvas(root)
+        self.scroll_y = tk.Scrollbar(root, orient='vertical', command=self.image_canvas.yview)
+        self.images_frame = tk.Frame(self.image_canvas)
+        self.show_images()
+        self.image_canvas.create_window(0, 0, anchor='nw', window=self.images_frame)
+        self.image_canvas.update_idletasks()
+        self.image_canvas.configure(scrollregion=self.image_canvas.bbox('all'), yscrollcommand=self.scroll_y.set)
+        self.image_canvas.pack(fill='both', expand=True, side='left')
+        self.scroll_y.pack(fill='y', side='right')
 
 # DOWNLOAD SCREENSHOTS FROM LIGHTSHOT VIA GENERATED URL
     def upload_files(self, last_url, amount):
@@ -104,28 +109,32 @@ class Main(tk.Frame):
                 response, content = h.request(img_url.group(0))
                 with open('./images/{0}.png'.format(base36.dumps(number)), 'wb') as out:
                     out.write(content)
+                text = pytesseract.image_to_string("./images/{0}.png".format(base36.dumps(number)), lang="rus+eng").lower()
+                str = 'password login purnhub пароль логин netflix email e-mail'
+                counter_str = 0
+                for s in str.split(' '):
+                    if text.find(s) != -1:
+                        counter_str += 1
+                if counter_str == 0:
+                    if os.path.exists('images/{0}.png'.format(base36.dumps(number))):
+                        os.remove('images/{0}.png'.format(base36.dumps(number)))
         self.redrawing_canvas()
 
+# Redrawing window
     def redrawing_canvas(self):
         self.image_canvas.destroy()
         self.scroll_y.destroy()
         self.images_frame.destroy()
-        self.image_canvas = tk.Canvas(root)
-        self.scroll_y = tk.Scrollbar(root, orient='vertical', command=self.image_canvas.yview)
-        self.images_frame = tk.Frame(self.image_canvas)
-        self.show_images()
-        self.image_canvas.create_window(0, 0, anchor='nw', window=self.images_frame)
-        self.image_canvas.update_idletasks()
-        self.image_canvas.configure(scrollregion=self.image_canvas.bbox('all'), yscrollcommand=self.scroll_y.set)
-        self.image_canvas.pack(fill='both', expand=True, side='left')
-        self.scroll_y.pack(fill='y', side='right')
+        self.create_canvas()
 
+# Deleting all images from the folder
     def delete_files(self):
         self.files = [file for file in os.listdir('./images')]
         for f in self.files:
             os.remove('./images/'+f)
         self.show_images()
 
+# Open image in a new window
     def open_image(self, event):
         Child(event.widget['image'], self.image_buttons)
 
