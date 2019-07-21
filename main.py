@@ -10,6 +10,9 @@ import pytesseract
 import threading
 from tkinter import ttk
 
+str_words_to_find = ''
+str_words_to_ignore = ''
+
 
 # CREATING MAIN-WINDOW
 class Main(tk.Frame):
@@ -38,23 +41,28 @@ class Main(tk.Frame):
         self.button_refresh = tk.Button(self.toolbar, bg='#333', image=self.refresh_image,
                                         command=self.redrawing_canvas)
         self.button_refresh.pack(side=tk.LEFT)
-        self.label_last_url = tk.Label(self.toolbar, text='Last symbols of URL: ', bg='#fafafa')
-        self.label_last_url.pack(side=tk.LEFT, padx=10)
-        self.entry_last_url = tk.Entry(self.toolbar)
-        self.entry_last_url.pack(side=tk.LEFT, padx=10)
-        self.label_amount_images = tk.Label(self.toolbar, text='Amount of pictures: ', bg='#fafafa')
-        self.label_amount_images.pack(side=tk.LEFT, padx=10)
-        self.entry_amount_images = tk.Entry(self.toolbar)
-        self.entry_amount_images.pack(side=tk.LEFT, padx=10)
+        self.label_last_url = tk.Label(self.toolbar, text='Last symbols of URL: *', bg='#fafafa')
+        self.label_last_url.pack(side=tk.LEFT, padx=5)
+        self.entry_last_url = tk.Entry(self.toolbar, width=14)
+        self.entry_last_url.pack(side=tk.LEFT, padx=5)
+        self.label_amount_images = tk.Label(self.toolbar, text='Amount of pictures: *', bg='#fafafa')
+        self.label_amount_images.pack(side=tk.LEFT, padx=5)
+        self.entry_amount_images = tk.Entry(self.toolbar, width=14)
+        self.entry_amount_images.pack(side=tk.LEFT, padx=5)
+        self.button_more_setting = tk.Button(self.toolbar, font='Arial 12', bg='#fafafa', text='More settings',
+                                             command=self.open_settings)
+        self.button_more_setting.pack(side=tk.LEFT, padx=5)
         self.button_download = tk.Button(self.toolbar, text='Download', bg='#fafafa', font='Arial 12')
         self.button_download.bind('<1>', lambda event: threading.Thread(target=self.upload_files,
                                                                         args=(self.entry_last_url.get(),
                                                                               self.entry_amount_images.get())).start())
-        self.button_download.pack(side=tk.LEFT, padx=10)
+
+        self.button_download.pack(side=tk.LEFT, padx=5)
         self.button_delete = tk.Button(self.toolbar, text='Delete all', bg='#fafafa', font='Arial 12',
                                        command=self.delete_files)
-        self.button_delete.pack(side=tk.LEFT, padx=10)
+        self.button_delete.pack(side=tk.LEFT, padx=5)
         self.create_canvas()
+
 
 # DELETE ALL FILES FROM 'IMAGES' DIRECTORY
     def clear_images_frame(self):
@@ -99,6 +107,9 @@ class Main(tk.Frame):
 
 # DOWNLOAD SCREENSHOTS FROM LIGHTSHOT VIA GENERATED URL
     def upload_files(self, last_url, amount):
+        global str_words_to_find
+        global str_words_to_ignore
+        print(str_words_to_find.split(','))
         number = base36.loads(last_url)
         processed = 0
         succeeded = 0
@@ -107,7 +118,7 @@ class Main(tk.Frame):
         self.label_processing = tk.Label(self.progressbar_frame, text='Processed {0} of {1}'.format(processed, amount),
                                          font='Arial 15')
         self.label_processing.pack(side=tk.TOP)
-        self.progressbar_downloading = ttk.Progressbar(self.progressbar_frame, length=100)
+        self.progressbar_downloading = ttk.Progressbar(self.progressbar_frame, length=150)
         self.progressbar_downloading.pack(side=tk.TOP)
         self.progressbar_downloading['value'] = 0
         self.progressbar_downloading['maximum'] = int(amount)
@@ -126,13 +137,18 @@ class Main(tk.Frame):
                 with open('./images/{0}.png'.format(base36.dumps(number)), 'wb') as out:
                     out.write(content)
                 text = pytesseract.image_to_string("./images/{0}.png".format(base36.dumps(number)), lang="rus+eng").lower()
-                str = 'password login pornhub пароль логин netflix email e-mail balance баланс'
-                counter_str = 0
-                for s in str.split(' '):
-                    if text.find(s) != -1:
-                        counter_str += 1
-                        break
-                if counter_str == 0:
+                counter_str = 1
+                if str_words_to_find != '':
+                    for s in str_words_to_find.split(','):
+                        if text.find(s) != -1:
+                            counter_str += 1
+                            break
+                if str_words_to_ignore != '':
+                    for s in str_words_to_ignore.split(','):
+                        if text.find(s) != -1:
+                            counter_str = 0
+                            break
+                if counter_str <= 1:
                     if os.path.exists('images/{0}.png'.format(base36.dumps(number))):
                         os.remove('images/{0}.png'.format(base36.dumps(number)))
                 else:
@@ -142,12 +158,15 @@ class Main(tk.Frame):
             processed += 1
             self.label_processing['text'] = 'Processed {0} of {1} (found: {2})'.format(processed, amount, succeeded)
 
+        self.progressbar_frame.destroy()
+
 # Redrawing window
     def redrawing_canvas(self):
         self.image_canvas.destroy()
         self.scroll_y.destroy()
         self.images_frame.destroy()
         self.create_canvas()
+        print()
 
 # Deleting all images from the folder
     def delete_files(self):
@@ -159,6 +178,11 @@ class Main(tk.Frame):
 # Open image in a new window
     def open_image(self, event):
         Child(event.widget['image'], self.image_buttons)
+
+# Open settings in a new window
+    def open_settings(self):
+        Settings()
+
 
 
 # CREATING CHILD-WINDOW THAT MAKE IMAGE FULL SIZE
@@ -182,9 +206,42 @@ class Child(tk.Toplevel):
         self.img = Image.open('images/'+self.image_buttons[self._image_][2])
         self.img = self.img.resize((self.w, self.h), Image.ANTIALIAS)
         self.image = ImageTk.PhotoImage(self.img)
-        self.label_big_image = tk.Label(self, width=self.w, height=self.h, image=self.image)
-        self.label_big_image.pack()
+        self.button_big_image = tk.Button(self, width=self.w, height=self.h, image=self.image, command=self.destroy)
+        self.button_big_image.pack()
 
+
+class Settings(tk.Toplevel):
+    def __init__(self):
+        tk.Toplevel.__init__(self)
+        self.init_settings()
+
+    def init_settings(self):
+        global str_words_to_find
+        global str_words_to_ignore
+        self.settings_frame = tk.Frame(self, bg='#fafafa')
+        self.settings_frame.pack(side=tk.TOP, fill=tk.BOTH)
+        self.label_keywords_to_find = tk.Label(self.settings_frame, bg='#fafafa',
+                                               text='Words to be found on images(sepparate by comma, or leave empty): ')
+        self.label_keywords_to_find.grid(row=1, column=1, padx=10, pady=10)
+        self.entry_keywords_to_find = tk.Entry(self.settings_frame, width=20, bg='#fafafa')
+        self.entry_keywords_to_find.insert('0', str_words_to_find)
+        self.entry_keywords_to_find.grid(row=1, column=2, padx=10, pady=10)
+        self.label_keywords_to_ignore = tk.Label(self.settings_frame,
+                        bg='#fafafa',text='Ignore images which include words(sepparate by comma, or leave empty): ')
+        self.label_keywords_to_ignore.grid(row = 2, column = 1, padx=10, pady=10)
+        self.entry_keywords_to_ignore = tk.Entry(self.settings_frame, width=20, bg='#fafafa')
+        self.entry_keywords_to_ignore.insert('0', str_words_to_ignore)
+        self.entry_keywords_to_ignore.grid(row = 2, column = 2, padx=10, pady=10)
+        self.button_apply = tk.Button(self.settings_frame, bg='#e6e8ff', text='Apply', width=20,
+                                                                    command=self.apply_settings)
+        self.button_apply.grid(row = 3, column=2)
+
+    def apply_settings(self):
+        global str_words_to_find
+        str_words_to_find = self.entry_keywords_to_find.get()
+        global str_words_to_ignore
+        str_words_to_ignore = self.entry_keywords_to_ignore.get()
+        self.destroy()
 
 # CREATING ROOT-WINDOW
 root = tk.Tk()
