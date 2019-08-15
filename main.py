@@ -10,6 +10,7 @@ import pytesseract
 import threading
 from tkinter import ttk
 
+
 str_words_to_find = ''
 str_words_to_ignore = ''
 
@@ -24,7 +25,7 @@ class Main(tk.Frame):
         if not os.path.exists('images'):
             os.makedirs('images')
         self.init_main()
-        self.thread_create_canvas = threading.Thread(target=self.create_canvas)
+        self.thread_create_canvas = threading.Thread(target=self.create_canvas, daemon=True)
 
     def init_main(self):
         # CREATING TOOLBAR AND ITS LABELS, ENTRIES AND BUTTON(download)
@@ -53,7 +54,7 @@ class Main(tk.Frame):
                                              command=self.open_settings)
         self.button_more_setting.pack(side=tk.LEFT, padx=5)
         self.button_download = tk.Button(self.toolbar, text='Download', bg='#fafafa', font='Arial 12')
-        self.button_download.bind('<1>', lambda event: threading.Thread(target=self.upload_files,
+        self.button_download.bind('<1>', lambda event: threading.Thread(target=self.upload_files, daemon=True,
                                                                         args=(self.entry_last_url.get(),
                                                                               self.entry_amount_images.get())).start())
 
@@ -62,7 +63,6 @@ class Main(tk.Frame):
                                        command=self.delete_files)
         self.button_delete.pack(side=tk.LEFT, padx=5)
         self.create_canvas()
-
 
 # DELETE ALL FILES FROM 'IMAGES' DIRECTORY
     def clear_images_frame(self):
@@ -88,7 +88,10 @@ class Main(tk.Frame):
                 continue
             img_width = self.img.width
             img_height = self.img.height
-            self.img = self.img.resize((158, 158), Image.BILINEAR)
+            try:
+                self.img = self.img.resize((158, 158), Image.BILINEAR)
+            except IOError:
+                continue
             self.images.append(ImageTk.PhotoImage(self.img))
             if y == 7:
                 y = 1
@@ -109,7 +112,6 @@ class Main(tk.Frame):
     def upload_files(self, last_url, amount):
         global str_words_to_find
         global str_words_to_ignore
-        print(str_words_to_find.split(','))
         number = base36.loads(last_url)
         processed = 0
         succeeded = 0
@@ -137,18 +139,20 @@ class Main(tk.Frame):
                 with open('./images/{0}.png'.format(base36.dumps(number)), 'wb') as out:
                     out.write(content)
                 text = pytesseract.image_to_string("./images/{0}.png".format(base36.dumps(number)), lang="rus+eng").lower()
-                counter_str = 1
+                temp_var = 0
+                check_var = False
                 if str_words_to_find != '':
+                    check_var = True
                     for s in str_words_to_find.split(','):
                         if text.find(s) != -1:
-                            counter_str += 1
+                            temp_var = 1
                             break
                 if str_words_to_ignore != '':
                     for s in str_words_to_ignore.split(','):
                         if text.find(s) != -1:
-                            counter_str = 0
+                            temp_var = -1
                             break
-                if counter_str <= 1:
+                if temp_var == -1 or (temp_var == 0 and check_var):
                     if os.path.exists('images/{0}.png'.format(base36.dumps(number))):
                         os.remove('images/{0}.png'.format(base36.dumps(number)))
                 else:
@@ -166,7 +170,6 @@ class Main(tk.Frame):
         self.scroll_y.destroy()
         self.images_frame.destroy()
         self.create_canvas()
-        print()
 
 # Deleting all images from the folder
     def delete_files(self):
@@ -182,7 +185,6 @@ class Main(tk.Frame):
 # Open settings in a new window
     def open_settings(self):
         Settings()
-
 
 
 # CREATING CHILD-WINDOW THAT MAKE IMAGE FULL SIZE
@@ -242,6 +244,7 @@ class Settings(tk.Toplevel):
         global str_words_to_ignore
         str_words_to_ignore = self.entry_keywords_to_ignore.get()
         self.destroy()
+
 
 # CREATING ROOT-WINDOW
 root = tk.Tk()
