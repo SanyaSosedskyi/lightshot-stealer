@@ -36,10 +36,7 @@ class Main(tk.Frame):
         self.label_instruction.pack(side=tk.LEFT, padx=240)
         self.toolbar = tk.Frame(root, bg='#fafafa', bd=2)
         self.toolbar.pack(side=tk.TOP, fill=tk.X)
-        self.refresh_image_temp = Image.open('button_refresh.jpg')
-        self.refresh_image_temp = self.refresh_image_temp.resize((40, 40), Image.ANTIALIAS)
-        self.refresh_image = ImageTk.PhotoImage(self.refresh_image_temp)
-        self.button_refresh = tk.Button(self.toolbar, bg='#333', image=self.refresh_image,
+        self.button_refresh = tk.Button(self.toolbar, bg='#fafafa', text='Reload',
                                         command=self.redrawing_canvas)
         self.button_refresh.pack(side=tk.LEFT)
         self.label_last_url = tk.Label(self.toolbar, text='Last symbols of URL: *', bg='#fafafa')
@@ -125,7 +122,6 @@ class Main(tk.Frame):
         self.progressbar_downloading['value'] = 0
         self.progressbar_downloading['maximum'] = int(amount)
         self.redrawing_canvas()
-
         for _ in range(int(amount)):
             url = 'https://prnt.sc/{0}'.format(base36.dumps(number-1))
             number -= 1
@@ -138,30 +134,33 @@ class Main(tk.Frame):
                 response, content = h.request(img_url.group(0))
                 with open('./images/{0}.png'.format(base36.dumps(number)), 'wb') as out:
                     out.write(content)
-                text = pytesseract.image_to_string("./images/{0}.png".format(base36.dumps(number)), lang="rus+eng").lower()
-                temp_var = 0
-                check_var = False
-                if str_words_to_find != '':
-                    check_var = True
-                    for s in str_words_to_find.split(','):
-                        if text.find(s) != -1:
-                            temp_var = 1
-                            break
-                if str_words_to_ignore != '':
-                    for s in str_words_to_ignore.split(','):
-                        if text.find(s) != -1:
-                            temp_var = -1
-                            break
-                if temp_var == -1 or (temp_var == 0 and check_var):
-                    if os.path.exists('images/{0}.png'.format(base36.dumps(number))):
-                        os.remove('images/{0}.png'.format(base36.dumps(number)))
+                if str_words_to_find != '' or str_words_to_ignore != '':
+                    text = pytesseract.image_to_string("./images/{0}.png".format(base36.dumps(number)), lang="rus+eng").lower()
+                    temp_var = 0
+                    check_var = False
+                    if str_words_to_find != '':
+                        check_var = True
+                        for s in str_words_to_find.split(','):
+                            if text.find(s) != -1:
+                                temp_var = 1
+                                break
+                    if str_words_to_ignore != '':
+                        for s in str_words_to_ignore.split(','):
+                            if text.find(s) != -1:
+                                temp_var = -1
+                                break
+                    if temp_var == -1 or (temp_var == 0 and check_var):
+                        if os.path.exists('images/{0}.png'.format(base36.dumps(number))):
+                            os.remove('images/{0}.png'.format(base36.dumps(number)))
+                    else:
+                        self.redrawing_canvas()
+                        succeeded += 1
                 else:
-                    self.redrawing_canvas()
                     succeeded += 1
             self.progressbar_downloading.step(1)
             processed += 1
             self.label_processing['text'] = 'Processed {0} of {1} (found: {2})'.format(processed, amount, succeeded)
-
+        self.redrawing_canvas()
         self.progressbar_frame.destroy()
 
 # Redrawing window
