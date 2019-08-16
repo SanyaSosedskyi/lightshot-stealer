@@ -9,7 +9,7 @@ import base36
 import pytesseract
 import threading
 from tkinter import ttk
-
+import webbrowser
 
 str_words_to_find = ''
 str_words_to_ignore = ''
@@ -31,9 +31,10 @@ class Main(tk.Frame):
         # CREATING TOOLBAR AND ITS LABELS, ENTRIES AND BUTTON(download)
         self.toolbar_2 = tk.Frame(root, bg='#fafafa', bd=2)
         self.toolbar_2.pack(side=tk.TOP, fill=tk.X)
-        self.label_instruction = tk.Label(self.toolbar_2, text='Go to https://prnt.sc/ and upload any picture,then copy'
-                            ' last symbols(example = ohu1pw)', bg='#fafafa', font='Arial 10', fg='green')
-        self.label_instruction.pack(side=tk.LEFT, padx=240)
+        self.button_instruction = tk.Button(self.toolbar_2, text=' Click here to open https://prnt.sc/ and upload any '
+                    'picture, then copy'' last symbols (example = ohu1pw) ', bg='#444', font='Arial 10', fg='#fafafa')
+        self.button_instruction.pack(side=tk.LEFT, padx=193)
+        self.button_instruction.bind('<1>', lambda e: webbrowser.open_new('https://prnt.sc/'))
         self.toolbar = tk.Frame(root, bg='#fafafa', bd=2)
         self.toolbar.pack(side=tk.TOP, fill=tk.X)
         self.button_refresh = tk.Button(self.toolbar, bg='#fafafa', text='Reload',
@@ -60,6 +61,9 @@ class Main(tk.Frame):
                                        command=self.delete_files)
         self.button_delete.pack(side=tk.LEFT, padx=5)
         self.create_canvas()
+
+    def open_url(self, e):
+        webbrowser.open_new('https://prnt.sc/')
 
 # DELETE ALL FILES FROM 'IMAGES' DIRECTORY
     def clear_images_frame(self):
