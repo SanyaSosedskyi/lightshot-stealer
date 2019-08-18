@@ -1,4 +1,5 @@
 import tkinter as tk
+import platform
 from PIL import Image, ImageTk
 import os
 import os.path
@@ -19,6 +20,8 @@ str_words_to_ignore = ''
 class Main(tk.Frame):
     def __init__(self, _root):
         super().__init__(root)
+        self.os_info = platform.platform()
+        print(self.os_info)
         self.root = _root
         self.images = []
         self.image_buttons = {}
@@ -28,39 +31,79 @@ class Main(tk.Frame):
         self.thread_create_canvas = threading.Thread(target=self.create_canvas, daemon=True)
 
     def init_main(self):
-        # CREATING TOOLBAR AND ITS LABELS, ENTRIES AND BUTTON(download)
-        self.toolbar_2 = tk.Frame(root, bg='#fafafa', bd=2)
-        self.toolbar_2.pack(side=tk.TOP, fill=tk.X)
-        self.button_instruction = tk.Button(self.toolbar_2, text=' Click here to open https://prnt.sc/ and upload any '
-                    'picture, then copy'' last symbols (example = ohu1pw) ', bg='#444', font='Arial 10', fg='#fafafa')
-        self.button_instruction.pack(side=tk.LEFT, padx=193)
-        self.button_instruction.bind('<1>', lambda e: webbrowser.open_new('https://prnt.sc/'))
-        self.toolbar = tk.Frame(root, bg='#fafafa', bd=2)
-        self.toolbar.pack(side=tk.TOP, fill=tk.X)
-        self.button_refresh = tk.Button(self.toolbar, bg='#fafafa', text='Reload',
-                                        command=self.redrawing_canvas)
-        self.button_refresh.pack(side=tk.LEFT)
-        self.label_last_url = tk.Label(self.toolbar, text='Last symbols of URL: *', bg='#fafafa')
-        self.label_last_url.pack(side=tk.LEFT, padx=5)
-        self.entry_last_url = tk.Entry(self.toolbar, width=14)
-        self.entry_last_url.pack(side=tk.LEFT, padx=5)
-        self.label_amount_images = tk.Label(self.toolbar, text='Amount of pictures: *', bg='#fafafa')
-        self.label_amount_images.pack(side=tk.LEFT, padx=5)
-        self.entry_amount_images = tk.Entry(self.toolbar, width=14)
-        self.entry_amount_images.pack(side=tk.LEFT, padx=5)
-        self.button_more_setting = tk.Button(self.toolbar, font='Arial 12', bg='#fafafa', text='More settings',
-                                             command=self.open_settings)
-        self.button_more_setting.pack(side=tk.LEFT, padx=5)
-        self.button_download = tk.Button(self.toolbar, text='Download', bg='#fafafa', font='Arial 12')
-        self.button_download.bind('<1>', lambda event: threading.Thread(target=self.upload_files, daemon=True,
-                                                                        args=(self.entry_last_url.get(),
-                                                                              self.entry_amount_images.get())).start())
 
-        self.button_download.pack(side=tk.LEFT, padx=5)
-        self.button_delete = tk.Button(self.toolbar, text='Delete all', bg='#fafafa', font='Arial 12',
-                                       command=self.delete_files)
-        self.button_delete.pack(side=tk.LEFT, padx=5)
-        self.create_canvas()
+        # CREATING TOOLBAR AND ITS LABELS, ENTRIES AND BUTTON(download)
+        if self.os_info.startswith('Linux'):
+            self.toolbar_2 = tk.Frame(root, bg='#fafafa', bd=2)
+            self.toolbar_2.pack(side=tk.TOP, fill=tk.X)
+            self.button_instruction = tk.Button(self.toolbar_2,
+                                                text=' Click here to open https://prnt.sc/ and upload any '
+                                                     'picture, then copy'' last symbols (example = ohu1pw) ', bg='#444',
+                                                font='Arial 10', fg='#fafafa')
+            self.button_instruction.pack(side=tk.LEFT, padx=193)
+            self.button_instruction.bind('<1>', lambda e: webbrowser.open_new('https://prnt.sc/'))
+            self.toolbar = tk.Frame(root, bg='#fafafa', bd=2)
+            self.toolbar.pack(side=tk.TOP, fill=tk.X)
+            self.button_refresh = tk.Button(self.toolbar, bg='#fafafa', text='Reload',
+                                            command=self.redrawing_canvas)
+            self.button_refresh.pack(side=tk.LEFT)
+            self.label_last_url = tk.Label(self.toolbar, text='Last symbols of URL: *', bg='#fafafa')
+            self.label_last_url.pack(side=tk.LEFT, padx=5)
+            self.entry_last_url = tk.Entry(self.toolbar, width=14)
+            self.entry_last_url.pack(side=tk.LEFT, padx=5)
+            self.label_amount_images = tk.Label(self.toolbar, text='Amount of pictures: *', bg='#fafafa')
+            self.label_amount_images.pack(side=tk.LEFT, padx=5)
+            self.entry_amount_images = tk.Entry(self.toolbar, width=14)
+            self.entry_amount_images.pack(side=tk.LEFT, padx=5)
+            self.button_more_setting = tk.Button(self.toolbar, font='Arial 12', bg='#fafafa', text='More settings',
+                                                 command=self.open_settings)
+            self.button_more_setting.pack(side=tk.LEFT, padx=5)
+            self.button_download = tk.Button(self.toolbar, text='Download', bg='#fafafa', font='Arial 12')
+            self.button_download.bind('<1>', lambda event: threading.Thread(target=self.upload_files, daemon=True,
+                                                                            args=(self.entry_last_url.get(),
+                                                                                  self.entry_amount_images.get())).start())
+
+            self.button_download.pack(side=tk.LEFT, padx=5)
+            self.button_delete = tk.Button(self.toolbar, text='Delete all', bg='#fafafa', font='Arial 12',
+                                           command=self.delete_files)
+            self.button_delete.pack(side=tk.LEFT, padx=5)
+
+            self.create_canvas()
+
+        else:
+            self.toolbar_2 = tk.Frame(root, bg='#fafafa', bd=2)
+            self.toolbar_2.pack(side=tk.TOP, fill=tk.X)
+            self.button_instruction = tk.Button(self.toolbar_2,
+                                                text=' Click here to open https://prnt.sc/ and upload any '
+                                                     'picture, then copy'' last symbols (example = ohu1pw) ', bg='#444',
+                                                font='Arial 11', fg='#fafafa')
+            self.button_instruction.pack(side=tk.LEFT, padx=143)
+            self.button_instruction.bind('<1>', lambda e: webbrowser.open_new('https://prnt.sc/'))
+            self.toolbar = tk.Frame(root, bg='#fafafa', bd=2)
+            self.toolbar.pack(side=tk.TOP, fill=tk.X)
+            self.button_refresh = tk.Button(self.toolbar, bg='#fafafa', text='Reload', font='Arial 13',
+                                            command=self.redrawing_canvas)
+            self.button_refresh.pack(side=tk.LEFT)
+            self.label_last_url = tk.Label(self.toolbar, text='Last symbols of URL: *', font='Arial 13', bg='#fafafa')
+            self.label_last_url.pack(side=tk.LEFT, padx=5)
+            self.entry_last_url = tk.Entry(self.toolbar, font='Arial 13', width=14)
+            self.entry_last_url.pack(side=tk.LEFT, padx=5)
+            self.label_amount_images = tk.Label(self.toolbar, text='Amount of pictures: *', font='Arial 13', bg='#fafafa')
+            self.label_amount_images.pack(side=tk.LEFT, padx=5)
+            self.entry_amount_images = tk.Entry(self.toolbar, font='Arial 13', width=14)
+            self.entry_amount_images.pack(side=tk.LEFT, padx=5)
+            self.button_more_setting = tk.Button(self.toolbar, font='Arial 13', bg='#fafafa', text='More settings',
+                                                 command=self.open_settings)
+            self.button_more_setting.pack(side=tk.LEFT, padx=5)
+            self.button_download = tk.Button(self.toolbar, text='Download', bg='#fafafa', font='Arial 13')
+            self.button_download.bind('<1>', lambda event: threading.Thread(target=self.upload_files, daemon=True,
+                                                                            args=(self.entry_last_url.get(),
+                                                                                  self.entry_amount_images.get())).start())
+            self.button_download.pack(side=tk.LEFT, padx=5)
+            self.button_delete = tk.Button(self.toolbar, text='Delete all', bg='#fafafa', font='Arial 13',
+                                           command=self.delete_files)
+            self.button_delete.pack(side=tk.LEFT, padx=5)
+            self.create_canvas()
 
     def open_url(self, e):
         webbrowser.open_new('https://prnt.sc/')
@@ -189,7 +232,6 @@ class Main(tk.Frame):
     def open_settings(self):
         Settings()
 
-
 # CREATING CHILD-WINDOW THAT MAKE IMAGE FULL SIZE
 class Child(tk.Toplevel):
     def __init__(self, _image_, image_buttons):
@@ -204,7 +246,7 @@ class Child(tk.Toplevel):
         self.h = self.image_buttons[self._image_][1]
         while self.w > 1000 or self.h > 600:
             self.w = int(self.w*0.95)
-            self.h = int(self.h*0.95)
+        self.h = int(self.h*0.95)
         self.sw = int((root.winfo_screenwidth()-self.w)/2)
         self.sh = int((root.winfo_screenheight()-self.h)/2)
         self.geometry('{0}x{1}+{2}+{3}'.format(self.w+20, self.h+20, self.sw, self.sh))
@@ -218,28 +260,52 @@ class Child(tk.Toplevel):
 class Settings(tk.Toplevel):
     def __init__(self):
         tk.Toplevel.__init__(self)
+        self.os_info = platform.platform()
         self.init_settings()
+        sw = int((root.winfo_screenwidth() - 770) / 2)
+        sh = int((root.winfo_screenheight() - 123) / 2)
+        self.geometry('770x123+{0}+{1}'.format(sw, sh))
 
     def init_settings(self):
         global str_words_to_find
         global str_words_to_ignore
-        self.settings_frame = tk.Frame(self, bg='#fafafa')
-        self.settings_frame.pack(side=tk.TOP, fill=tk.BOTH)
-        self.label_keywords_to_find = tk.Label(self.settings_frame, bg='#fafafa',
-                                               text='Words to be found on images(sepparate by comma, or leave empty): ')
-        self.label_keywords_to_find.grid(row=1, column=1, padx=10, pady=10)
-        self.entry_keywords_to_find = tk.Entry(self.settings_frame, width=20, bg='#fafafa')
-        self.entry_keywords_to_find.insert('0', str_words_to_find)
-        self.entry_keywords_to_find.grid(row=1, column=2, padx=10, pady=10)
-        self.label_keywords_to_ignore = tk.Label(self.settings_frame,
-                        bg='#fafafa',text='Ignore images which include words(sepparate by comma, or leave empty): ')
-        self.label_keywords_to_ignore.grid(row = 2, column = 1, padx=10, pady=10)
-        self.entry_keywords_to_ignore = tk.Entry(self.settings_frame, width=20, bg='#fafafa')
-        self.entry_keywords_to_ignore.insert('0', str_words_to_ignore)
-        self.entry_keywords_to_ignore.grid(row = 2, column = 2, padx=10, pady=10)
-        self.button_apply = tk.Button(self.settings_frame, bg='#e6e8ff', text='Apply', width=20,
-                                                                    command=self.apply_settings)
-        self.button_apply.grid(row = 3, column=2)
+        if self.os_info.startswith('Windows'):
+            self.settings_frame = tk.Frame(self, bg='#fafafa')
+            self.settings_frame.pack(side=tk.TOP, fill=tk.BOTH)
+            self.label_keywords_to_find = tk.Label(self.settings_frame, bg='#fafafa', font='Arial 13',
+                                                   text='Words to be found on images(sepparate by comma, or leave empty): ')
+            self.label_keywords_to_find.grid(row=1, column=1, padx=10, pady=10)
+            self.entry_keywords_to_find = tk.Entry(self.settings_frame, width=20, font='Arial 13', bg='#fafafa')
+            self.entry_keywords_to_find.insert('0', str_words_to_find)
+            self.entry_keywords_to_find.grid(row=1, column=2, padx=10, pady=10)
+            self.label_keywords_to_ignore = tk.Label(self.settings_frame, font='Arial 13',
+                            bg='#fafafa', text='Ignore images which include words(sepparate by comma, or leave empty): ')
+            self.label_keywords_to_ignore.grid(row=2, column=1, padx=10, pady=10)
+            self.entry_keywords_to_ignore = tk.Entry(self.settings_frame, width=20, font='Arial 13', bg='#fafafa')
+            self.entry_keywords_to_ignore.insert('0', str_words_to_ignore)
+            self.entry_keywords_to_ignore.grid(row = 2, column = 2, padx=10, pady=10)
+            self.button_apply = tk.Button(self.settings_frame, bg='#e6e8ff', font='Arial 13', text='Apply', width=20,
+                                                                        command=self.apply_settings)
+            self.button_apply.grid(row=3, column=2)
+        else:
+            self.settings_frame = tk.Frame(self, bg='#fafafa')
+            self.settings_frame.pack(side=tk.TOP, fill=tk.BOTH)
+            self.label_keywords_to_find = tk.Label(self.settings_frame, bg='#fafafa',
+                                                   text='Words to be found on images(sepparate by comma, or leave empty): ')
+            self.label_keywords_to_find.grid(row=1, column=1, padx=10, pady=10)
+            self.entry_keywords_to_find = tk.Entry(self.settings_frame, width=20, bg='#fafafa')
+            self.entry_keywords_to_find.insert('0', str_words_to_find)
+            self.entry_keywords_to_find.grid(row=1, column=2, padx=10, pady=10)
+            self.label_keywords_to_ignore = tk.Label(self.settings_frame,
+                                                     bg='#fafafa',
+                                                     text='Ignore images which include words(sepparate by comma, or leave empty): ')
+            self.label_keywords_to_ignore.grid(row=2, column=1, padx=10, pady=10)
+            self.entry_keywords_to_ignore = tk.Entry(self.settings_frame, width=20, bg='#fafafa')
+            self.entry_keywords_to_ignore.insert('0', str_words_to_ignore)
+            self.entry_keywords_to_ignore.grid(row=2, column=2, padx=10, pady=10)
+            self.button_apply = tk.Button(self.settings_frame, bg='#e6e8ff', text='Apply', width=20,
+                                          command=self.apply_settings)
+        self.button_apply.grid(row=3, column=2)
 
     def apply_settings(self):
         global str_words_to_find
