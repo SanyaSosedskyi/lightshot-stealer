@@ -232,6 +232,7 @@ class Main(tk.Frame):
     def open_settings(self):
         Settings()
 
+
 # CREATING CHILD-WINDOW THAT MAKE IMAGE FULL SIZE
 class Child(tk.Toplevel):
     def __init__(self, _image_, image_buttons):
@@ -245,8 +246,8 @@ class Child(tk.Toplevel):
         self.w = self.image_buttons[self._image_][0]
         self.h = self.image_buttons[self._image_][1]
         while self.w > 1000 or self.h > 600:
-            self.w = int(self.w*0.95)
-        self.h = int(self.h*0.95)
+            self.w = int(self.w*0.9)
+            self.h = int(self.h*0.9)
         self.sw = int((root.winfo_screenwidth()-self.w)/2)
         self.sh = int((root.winfo_screenheight()-self.h)/2)
         self.geometry('{0}x{1}+{2}+{3}'.format(self.w+20, self.h+20, self.sw, self.sh))
@@ -305,7 +306,7 @@ class Settings(tk.Toplevel):
             self.entry_keywords_to_ignore.grid(row=2, column=2, padx=10, pady=10)
             self.button_apply = tk.Button(self.settings_frame, bg='#e6e8ff', text='Apply', width=20,
                                           command=self.apply_settings)
-        self.button_apply.grid(row=3, column=2)
+            self.button_apply.grid(row=3, column=2)
 
     def apply_settings(self):
         global str_words_to_find
